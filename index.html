@@ -1,0 +1,24 @@
+<script>
+  Promise.all([
+    fetch("data/dredging_bins_2017_2023_annual_bin0p1.csv").then(r => r.text()),
+    fetch("data/dredging_bins_2017_2023_monthly_bin0p1.csv").then(r => r.text()),
+    fetch("config/kepler_dragatge_2017_2023_config.json").then(r => r.json())
+  ]).then(([annualCsv, monthlyCsv, config]) => {
+    KeplerGl.render(
+      document.getElementById("map"),
+      {
+        datasets: [
+          {
+            info: { label: "Annual dredging activity", id: "annual" },
+            data: annualCsv
+          },
+          {
+            info: { label: "Monthly dredging activity", id: "monthly" },
+            data: monthlyCsv
+          }
+        ],
+        config: config.config
+      }
+    );
+  });
+</script>
