@@ -1,12 +1,71 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dredging visualization</title>
+  <meta charset="UTF-8" />
+  <title>Dredging activity in Europe (2017–2023)</title>
+
+  <!-- Kepler.gl + dependencies -->
+  <script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/redux@4/dist/redux.min.js"></script>
+  <script src="https://unpkg.com/react-redux@7/dist/react-redux.min.js"></script>
+  <script src="https://unpkg.com/kepler.gl@3.0.0/umd/keplergl.min.js"></script>
+
+  <style>
+    body { margin: 0; }
+    #map { position: absolute; width: 100vw; height: 100vh; }
+  </style>
 </head>
+
 <body>
-  <h1>Dredging visualization</h1>
-  <p>If you can read this, GitHub Pages is serving index.html correctly.</p>
+  <div id="map"></div>
+
+  <script>
+    const { KeplerGl } = window.KeplerGl;
+    const { createStore, combineReducers, applyMiddleware } = window.Redux;
+    const { Provider } = window.ReactRedux;
+
+    const reducers = combineReducers({
+      keplerGl: KeplerGl.keplerGlReducer
+    });
+
+    const store = createStore(
+      reducers,
+      applyMiddleware(KeplerGl.middleware)
+    );
+
+    function App() {
+      return React.createElement(
+        KeplerGl,
+        {
+          id: "map",
+          mapboxApiAccessToken: null,
+          width: window.innerWidth,
+          height: window.innerHeight
+        }
+      );
+    }
+
+    ReactDOM.render(
+      React.createElement(Provider, { store }, React.createElement(App)),
+      document.getElementById("map")
+    );
+
+    // Load data + config
+    Promise.all([
+      fetch("data/dredging_bins_2017_2023_monthly_bin0p1.csv").then(r => r.text()),
+      fetch("config/kepler_dragatge_2017_2023_config.json").then(r => r.json())
+    ]).then(([csv, config]) => {
+      store.dispatch(
+        KeplerGl.addDataToMap({
+          datasets: {
+            info: { label: "Dredging activity", id: "dredging" },
+            data: csv
+          },
+          config: config
+        })
+      );
+    });
+  </script>
 </body>
 </html>
